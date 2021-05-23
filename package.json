@@ -5,8 +5,7 @@
   "author": "moruiyi",
   "license": "MIT",
   "dependencies": {
-    "commander": "^7.2.0",
-    "oclif": "^1.17.0"
+    "commander": "^7.2.0"
   },
   "pkg": {
     "targets": [
@@ -15,9 +14,17 @@
     "outputPath": "release"
   },
   "scripts": {
-    "release": "npx pkg ."
+    "release": "npx pkg .",
+    "start": "node index.js"
   },
   "bin": {
     "dscm": "index.js"
+  },
+  "devDependencies": {
+    "prettier": "^2.3.0"
+  },
+  "prettier": {
+    "tabWidth": 4,
+    "semi": true
   }
 }
