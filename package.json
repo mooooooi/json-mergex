@@ -1,12 +1,19 @@
 {
-  "name": "json-merge-cli",
-  "version": "1.0.0",
+  "name": "json-mergex",
+  "version": "1.0.2",
   "main": "index.mjs",
-  "author": "moruiyi",
+  "author": "LittleMoi",
   "license": "MIT",
   "dependencies": {
-    "commander": "^7.2.0"
+    "colors": "^1.4.0",
+    "commander": "^7.2.0",
+    "globby": "^11.0.3",
+    "prompts": "^2.4.1"
   },
+  "files": [
+    "/bin",
+    "index.js"
+  ],
   "pkg": {
     "targets": [
       "node14-win"
@@ -15,10 +22,12 @@
   },
   "scripts": {
     "release": "npx pkg .",
-    "start": "node index.js"
+    "start": "node index.js",
+    "login-offical": "npm login --registry=https://registry.npmjs.org",
+    "pub-offical": "npm publish --registry=https://registry.npmjs.org"
   },
   "bin": {
-    "dscm": "index.js"
+    "json-mergex": "./bin/run"
   },
   "devDependencies": {
     "prettier": "^2.3.0"

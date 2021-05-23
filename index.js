@@ -1,11 +1,15 @@
 const fs = require("fs");
+const path = require("path");
+const globby = require("globby");
+const prompts = require("prompts");
+require("colors");
 const { program } = require("commander");
 
 program
     .version("0.0.1")
     .option("-s, --src <path>", "the path of source file")
     .option("-d, --dst <path>", "the path of destintion file")
-    .option("-m --merge [paths...]", "the path of file to merge")
+    .option("-m --merge <path>", "the path of file to merge")
     .option("-nw --nowait", "wait for press any button to exit");
 
 program.parse(process.argv);
@@ -14,7 +18,7 @@ const opts = program.opts();
 main(opts.src, opts.dst, opts.merge)
     .then(() => {
         if (!opts.nowait) {
-            console.log("Process any key to continue...");
+            console.log("Process any key to continue...".gray);
             process.stdin.setRawMode(true);
             process.stdin.resume();
             process.stdin.on("data", () => {
@@ -66,8 +70,71 @@ function deepTraveral(json, cb, nodeArr = []) {
 }
 
 async function main(srcJsonFilePath, targetJsonFilePath, mergeJsonFilePath) {
+    if (!mergeJsonFilePath) {
+        const globbyPath =
+            /* path.posix.join(__dirname, "*.merge.json"); */ "*.merge.json";
+        const pathChoices = await globby(globbyPath);
+        switch (pathChoices.length) {
+            case 0:
+                console.error(
+                    "Cannot find merge json file" + "(*.merge.json)!".red
+                );
+                return;
+            case 1:
+                mergeJsonFilePath = pathChoices[0];
+                break;
+            default:
+                const { selecgedMergeJsonPath } = await prompts({
+                    type: "select",
+                    name: "selecgedMergeJsonPath",
+                    message: "Whick file you need to process?",
+                    choices: pathChoices.map((c) => {
+                        return {
+                            title: c,
+                            value: c,
+                        };
+                    }),
+                });
+                mergeJsonFilePath = selecgedMergeJsonPath;
+                break;
+        }
+        mergeJsonFilePath = path.resolve(mergeJsonFilePath, ".");
+        console.log("Find merge file: " + mergeJsonFilePath.green);
+    }
+
+    const mergeBasename = path.basename(mergeJsonFilePath);
+    const pattern = /((.+))\.merge\.json/;
+    const srcPrefix = pattern.exec(mergeBasename)[1];
+    if (!srcJsonFilePath) {
+        const toFindSrcPath = path.resolve(
+            mergeJsonFilePath,
+            "..",
+            srcPrefix + ".json"
+        );
+        if (!fs.existsSync(toFindSrcPath)) {
+            console.error("Cannot find src file: " + toFindSrcPath.red);
+            return;
+        }
+        console.log("Find src file: " + toFindSrcPath.green);
+        srcJsonFilePath = toFindSrcPath;
+    }
+
     if (!targetJsonFilePath) {
-        targetJsonFilePath = srcJsonFilePath
+        const { targetIsOverride } = await prompts({
+            type: "confirm",
+            name: "targetIsOverride",
+            message: "The dst path is empty, can you confirm to override the source file?",
+            initial: true,
+        });
+        if (targetIsOverride) {
+            targetJsonFilePath = srcJsonFilePath;
+        } else {
+            targetJsonFilePath = path.resolve(
+                mergeJsonFilePath,
+                "..",
+                srcPrefix + ".merged.json"
+            );
+        }
     }
     try {
         // await child_process.execSync("git reset " + "server_config.json", {
@@ -77,9 +144,6 @@ async function main(srcJsonFilePath, targetJsonFilePath, mergeJsonFilePath) {
         if (!fs.existsSync(srcJsonFilePath)) {
             throw `error: src path [${srcJsonFilePath}] cannot find!`;
         }
-        if (!fs.existsSync(targetJsonFilePath)) {
-            throw `error: dst path [${targetJsonFilePath}] cannot find!`;
-        }
         if (!fs.existsSync(mergeJsonFilePath)) {
             throw `error: merge path [${mergeJsonFilePath}] cannot find!`;
         }
@@ -87,10 +151,10 @@ async function main(srcJsonFilePath, targetJsonFilePath, mergeJsonFilePath) {
         let targetJson;
         try {
             targetJson = JSON.parse(
-                fs.readFileSync(targetJsonFilePath, { encoding: "utf-8" })
+                fs.readFileSync(srcJsonFilePath, { encoding: "utf-8" })
             );
         } catch (e) {
-            throw "解析server_config.json文件时报错：" + e.message;
+            throw "parse src file error：".red + e.message;
         }
         let mergeJson;
         try {
@@ -98,7 +162,7 @@ async function main(srcJsonFilePath, targetJsonFilePath, mergeJsonFilePath) {
                 fs.readFileSync(mergeJsonFilePath, { encoding: "utf-8" })
             );
         } catch (e) {
-            throw "解析server_config.merge.json文件时报错：" + e.message;
+            throw "parse merge file error: ".red + e.message;
         }
         const $prop = mergeJson["$prop"] || {};
         delete mergeJson["$prop"];
@@ -106,12 +170,12 @@ async function main(srcJsonFilePath, targetJsonFilePath, mergeJsonFilePath) {
             const idx = indexOfInvalidPathNode(nodeArr, targetJson);
             if (idx >= 0) {
                 console.warn(
-                    `warning: 属性"${nodeArr.join(".")}"找不到，原因是${
+                    `warning: attribute "${nodeArr.join(".")}" cannot find, block at ${
                         nodeArr[idx]
-                    }找不到，跳过。`
+                    }, ..skip.`
                 );
             } else {
-                console.log("正在替换: " + nodeArr.join("."));
+                console.log("Replace: " + nodeArr.join("."));
                 setValue(targetJson, nodeArr, value);
             }
         });
@@ -126,7 +190,7 @@ async function main(srcJsonFilePath, targetJsonFilePath, mergeJsonFilePath) {
             },
             2
         );
-        fs.writeFileSync(srcJsonFilePath, targetResultStr);
+        fs.writeFileSync(targetJsonFilePath, targetResultStr);
     } catch (e) {
         console.error(e.stderr || e);
     }
