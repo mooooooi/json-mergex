@@ -16,7 +16,7 @@
   ],
   "pkg": {
     "targets": [
-      "node14-win"
+      "node14-win", "node14-linux", "node14-macos"
     ],
     "outputPath": "release"
   },
