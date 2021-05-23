@@ -11,7 +11,7 @@
 
 *With Node.js*
 ```js
-npm install -g 
+npm install -g json-mergex
 ```
 *With binary executor*
 1. Go to [release page](https://github.com/LittleMoi/json-mergex/releases) and download file for your platform.
