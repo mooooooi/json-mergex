@@ -1,0 +1,9 @@
+{
+  "name": "LittleMoi",
+  "age": 22,
+  "skill": {
+    "JavaScript": 100,
+    "CSharp": 90,
+    "Java": 120
+  }
+}

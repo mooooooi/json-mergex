@@ -1,0 +1,10 @@
+{
+    "$prop": {
+        "csharp-grade": 90
+    },
+    "age": 22,
+    "skill": {
+        "Java": 120,
+        "CSharp": "$csharp-grade" 
+    }
+}
