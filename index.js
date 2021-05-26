@@ -19,7 +19,9 @@ main(opts.src, opts.dst, opts.merge)
     .then(() => {
         if (!opts.nowait) {
             console.log("Process any key to continue...".gray);
-            process.stdin.setRawMode(true);
+            if (process.stdin.isTTY) {
+                process.stdin.setRawMode(true);
+            }
             process.stdin.resume();
             process.stdin.on("data", () => {
                 process.exit(0);
