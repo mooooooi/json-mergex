@@ -1,6 +1,6 @@
 {
   "name": "json-mergex",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "main": "index.mjs",
   "author": "LittleMoi",
   "license": "MIT",
@@ -16,7 +16,9 @@
   ],
   "pkg": {
     "targets": [
-      "node14-win", "node14-linux", "node14-macos"
+      "node14-win",
+      "node14-linux",
+      "node14-macos"
     ],
     "outputPath": "release"
   },
