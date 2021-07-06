@@ -6,5 +6,6 @@
     "skill": {
         "Java": 120,
         "CSharp": "$csharp-grade" 
-    }
+    },
+    "unexistedFiled": false
 }

@@ -5,5 +5,6 @@
     "JavaScript": 100,
     "CSharp": 90,
     "Java": 120
-  }
+  },
+  "unexistedFiled": false
 }

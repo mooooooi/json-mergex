@@ -10,7 +10,8 @@ program
     .option("-s, --src <path>", "the path of source file")
     .option("-d, --dst <path>", "the path of destintion file")
     .option("-m --merge <path>", "the path of file to merge")
-    .option("-nw --nowait", "wait for press any button to exit");
+    .option("-nw --nowait", "wait for press any button to exit")
+    .option("-f --force", "replacement directly without checking for presence", false);
 
 program.parse(process.argv);
 
@@ -171,11 +172,20 @@ async function main(srcJsonFilePath, targetJsonFilePath, mergeJsonFilePath) {
         deepTraveral(mergeJson, (value, nodeArr) => {
             const idx = indexOfInvalidPathNode(nodeArr, targetJson);
             if (idx >= 0) {
-                console.warn(
-                    `warning: attribute "${nodeArr.join(".")}" cannot find, block at ${
-                        nodeArr[idx]
-                    }, ..skip.`
-                );
+                if (opts.force) {
+                    console.warn(
+                        `warning: attribute "${nodeArr.join(".")}" cannot find, block at ${
+                            nodeArr[idx]
+                        }, but still replace in force mode.`
+                    )
+                    setValue(targetJson, nodeArr, value);
+                } else {
+                    console.warn(
+                        `warning: attribute "${nodeArr.join(".")}" cannot find, block at ${
+                            nodeArr[idx]
+                        }, ..skip.`
+                    );
+                }
             } else {
                 console.log("Replace: " + nodeArr.join("."));
                 setValue(targetJson, nodeArr, value);
