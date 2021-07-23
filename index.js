@@ -6,17 +6,17 @@ require("colors");
 const { program } = require("commander");
 
 program
-    .version("0.0.1")
+    .version("1.0.6")
     .option("-s, --src <path>", "the path of source file")
     .option("-d, --dst <path>", "the path of destintion file")
     .option("-m --merge <path>", "the path of file to merge")
     .option("-nw --nowait", "wait for press any button to exit")
-    .option("-f --force", "replacement directly without checking for presence", false);
+    .option("-f --force", "replacement directly without checking for presence");
 
 program.parse(process.argv);
 
 const opts = program.opts();
-main(opts.src, opts.dst, opts.merge)
+main(opts.src, opts.dst, opts.merge, opts.force)
     .then(() => {
         if (!opts.nowait) {
             console.log("Process any key to continue...".gray);
@@ -72,7 +72,7 @@ function deepTraveral(json, cb, nodeArr = []) {
     }
 }
 
-async function main(srcJsonFilePath, targetJsonFilePath, mergeJsonFilePath) {
+async function main(srcJsonFilePath, targetJsonFilePath, mergeJsonFilePath, isForce) {
     if (!mergeJsonFilePath) {
         const globbyPath =
             /* path.posix.join(__dirname, "*.merge.json"); */ "*.merge.json";
@@ -139,6 +139,18 @@ async function main(srcJsonFilePath, targetJsonFilePath, mergeJsonFilePath) {
             );
         }
     }
+
+    if (Object.keys(opts).length == 0) {
+        isForce = (await prompts({
+            type: "toggle",
+            name: "isForce",
+            message: "Need it enter the force mode?",
+            initial: true,
+            active: "force",
+            inactive: "non-force"
+        })).isForce;
+    }
+
     try {
         // await child_process.execSync("git reset " + "server_config.json", {
         //     encoding: "utf-8",
@@ -172,7 +184,7 @@ async function main(srcJsonFilePath, targetJsonFilePath, mergeJsonFilePath) {
         deepTraveral(mergeJson, (value, nodeArr) => {
             const idx = indexOfInvalidPathNode(nodeArr, targetJson);
             if (idx >= 0) {
-                if (opts.force) {
+                if (isForce) {
                     console.warn(
                         `warning: attribute "${nodeArr.join(".")}" cannot find, block at ${
                             nodeArr[idx]
